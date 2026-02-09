@@ -22,15 +22,21 @@ if(NOT DEFINED CPM_LOCAL_PACKAGES_ONLY)
         "CPM will not be forbidden from downloading packages. Will have to use local packages." FORCE)
 endif()
 
+# Baseline dependencies
 option(ENABLE_MBEDTLS "" OFF)
 set(ENABLE_NETTLE OFF) # UNSUPPORTED and therefore forced OFF (reason: does not support CMake)
 option(ENABLE_OPENSSL "" ON)
 
-
-option(ENABLE_BZip2 "" ON)
-option(ENABLE_ZLIB "" ON)
+# Hash related dependencies
+option(ENABLE_LIBB2 "" OFF) # UNSUPPORTED and therefore forced OFF (reason: does not support CMake)
+option(ENABLE_LZ4 "" ON)
+# option(ENABLE_LZO "" OFF)
 option(ENABLE_LZMA "" ON)
 option(ENABLE_ZSTD "" ON)
+
+option(ENABLE_ZLIB "" ON)
+option(ENABLE_BZip2 "" ON)
+
 
 option(ENABLE_LZ4 "" ON)
 
@@ -47,18 +53,18 @@ include(cmake/CPM.cmake)
 include(cmake/stdlibQuery.cmake)
 
 
-#####################################################################
-### Staging ###
-#####################################################################
+#-----------------------------------------------------------------------------
+# Staging
+#-----------------------------------------------------------------------------
 include(cmake/StageOutputs.cmake)
 if(libarchive_superbuild_STAGE_OUTPUTS)
     stageOutputDirsFor(libarchive_superbuild)
 endif()
 
 
-######################################################################
-### Target specification ###
-######################################################################
+#-----------------------------------------------------------------------------
+# Target specification
+#-----------------------------------------------------------------------------
 
 # Try to just find libarchive, if found its all good
 if(libarchive_superbuild_USE_LOCAL_PACKAGES)
@@ -68,9 +74,9 @@ endif()
 # Execute the following only if either A) we don't want to use local packages (at all) or B) we want to use them but 'LibArchive' package wasn't found
 if(NOT LibArchive_FOUND)
 
-    #####################################################################
-    ### Obtain baseline dependencies ###
-    #####################################################################
+    #-----------------------------------------------------------------------------
+    # Obtain baseline dependencies 
+    #-----------------------------------------------------------------------------
     if(ENABLE_MBEDTLS)
         if(libarchive_superbuild_USE_LOCAL_PACKAGES)
             find_package(MbedTLS OPTIONAL CONFIG)
@@ -87,28 +93,57 @@ if(NOT LibArchive_FOUND)
     endif()
 
     if(ENABLE_OPENSSL)
-        if(libarchive_superbuild_USE_LOCAL_PACKAGES)
-            find_package(OpenSSL OPTIONAL)
-        endif()
+        if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+            message(STATUS "OpenSSL is deprecated on MacOS - Disabling finding and/or building it")
+        else()
+            if(libarchive_superbuild_USE_LOCAL_PACKAGES)
+                find_package(OpenSSL OPTIONAL)
+            endif()
 
-        if(NOT OpenSSL_FOUND)
-            # We need to test for some programs here:
-            # jom  
-            # strawberryperl
-            # nasm
+            if(NOT OpenSSL_FOUND)
+                # We need to test for some programs here:
+                # jom  
+                # strawberryperl
+                # nasm
 
-            CPMAddPackage(
-                URI "gh:jimmy-park/openssl-cmake@3.6"
-                OPTIONS
-                "BUILD_SHARED_LIBS OFF"
-                "OPENSSL_TEST OFF"
-            )
+                CPMAddPackage(
+                    URI "gh:jimmy-park/openssl-cmake#3.6.0"
+                    OPTIONS
+                    "OPENSSL_TARGET_VERSION 3.6.1"
+                    "BUILD_SHARED_LIBS OFF"
+                    "OPENSSL_TEST OFF"
+
+                )
+            endif()
         endif()
     endif()
 
-    #####################################################################
-    ### Obtain compression library dependencies ###
-    #####################################################################
+    #-----------------------------------------------------------------------------
+    # Obtain compression library dependencies
+    #-----------------------------------------------------------------------------
+    if(ENABLE_LZ4)
+        if(libarchive_superbuild_USE_LOCAL_PACKAGES)
+            find_package(lz4 OPTIONAL CONFIG)
+        endif()
+
+        if(NOT lz4_FOUND)
+            CPMAddPackage(
+                URI "gh:lz4/lz4@1.10.0"
+                SOURCE_SUBDIR build/cmake
+                OPTIONS
+                "BUILD_SHARED_LIBS OFF"
+                "BUILD_STATIC_LIBS ON"
+                "LZ4_BUILD_CLI OFF"
+                NAME lz4
+            )
+            # This is a hack to trick the ancient-style CMakeLists script in libarchive
+            set(LZ4_LIBRARY lz4)
+            set(LZ4_INCLUDE_DIR ${lz4_SOURCE_DIR}/lib)
+            set(LZ4_FOUND TRUE)
+
+        endif()
+    endif()
+
     if(ENABLE_ZLIB)
         if(libarchive_superbuild_USE_LOCAL_PACKAGES)
             find_package(ZLIB OPTIONAL)
@@ -116,20 +151,21 @@ if(NOT LibArchive_FOUND)
 
         if(NOT ZLIB_FOUND)
             CPMAddPackage(
-                URI "gh:tukaani-project/xz@5.8.2"
+                URI "gh:madler/zlib@1.3.1.2"
                 OPTIONS
-                "BUILD_SHARED_LIBS OFF"
-                "ENABLE_NLS OFF"
-                "XZ_TOOL_XZDEC OFF"
-                "XZ_TOOL_LZMADEC OFF"
-                "XZ_TOOL_LZMAINFO OFF"
-                "XZ_TOOL_XZ OFF"
-                "XZ_TOOL_XZDEC OFF"
-                "XZ_TOOL_SCRIPTS OFF"
-                "XZ_DOXYGEN OFF"
-                "XZ_DOC OFF"
-                NAME xz
+                "ZLIB_BUILD_SHARED OFF"
+                "ZLIB_BUILD_STATIC ON"
+                "ZLIB_INSTALL OFF"
+                "ZLIB_INSTALL_COMPAT_DLL OFF"
+                "ZLIB_BUILD_TESTING OFF"
+                "ZLIB_BUILD_MINIZIP OFF"
+                NAME ZLIB
             )
+            # This is a hack to trick the ancient-style CMakeLists script in libarchive
+            set(ZLIB_LIBRARIES zlibstatic)
+            set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR})
+            set(ZLIB_FOUND TRUE)
+
         endif()
     endif()
 
@@ -138,6 +174,7 @@ if(NOT LibArchive_FOUND)
             find_package(LibLZMA OPTIONAL)
         endif()
 
+        set(LZMA_API_STATIC ON)
         if(NOT LibLZMA_FOUND)
             CPMAddPackage(
                 URI "gh:tukaani-project/xz@5.8.2"
@@ -152,12 +189,14 @@ if(NOT LibArchive_FOUND)
                 "XZ_TOOL_SCRIPTS OFF"
                 "XZ_DOXYGEN OFF"
                 "XZ_DOC OFF"
-                NAME xz
+                NAME LibLZMA
             )
 
             # This is a hack to trick the ancient-style CMakeLists script in libarchive
             set(LIBLZMA_LIBRARY liblzma)
+            set(LIBLZMA_LIBRARIES liblzma)
             set(LIBLZMA_INCLUDE_DIR ${xz_SOURCE_DIR}/src/liblzma/api)
+            set(LIBLZMA_INCLUDE_DIRS ${xz_SOURCE_DIR}/src/liblzma/api)
             set(LIBLZMA_FOUND TRUE)
         endif()
     endif()
@@ -165,18 +204,14 @@ if(NOT LibArchive_FOUND)
 
 
 
-
-
-
-    #####################################################################
-    ### Obtain libarchive ###
-    #####################################################################
+    #-----------------------------------------------------------------------------
+    # Obtain libarchive
+    #-----------------------------------------------------------------------------
     CPMAddPackage(
         URI "gh:libarchive/libarchive@3.8.5"
         OPTIONS
         "ENABLE_OPENSSL OFF"
         "ENABLE_LIBB2 OFF"
-        "ENABLE_LZ4 OFF"
         "ENABLE_EXPAT OFF"
         "ENABLE_ICONV OFF"
         # "ENABLE_LIBGCC OFF"
