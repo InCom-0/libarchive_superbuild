@@ -1,0 +1,1 @@
+namespace libarchive_superbuild {}
