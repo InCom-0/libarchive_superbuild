@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.30...4.2)
 
+# TODO: There is a wierd problem with the 'NAME' parameter ... so far it seems that for some reason it has to be 'LibArchive' when including libarchive_superbuild
 project(libarchive_superbuild
     HOMEPAGE_URL "https://github.com/InCom-0/libarchive_superbuild"
     DESCRIPTION
@@ -104,7 +105,7 @@ endif()
 
 # Try to just find libarchive, if found its all good
 if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_LIBARCHIVE_FORCE_CPM))
-    find_package(LibArchive OPTIONAL GLOBAL)
+    find_package(LibArchive  GLOBAL)
 endif()
 
 # Execute the following only if either A) we don't want to use local packages (at all) or B) we want to use them but 'LibArchive' package wasn't found
@@ -115,7 +116,7 @@ if(NOT LibArchive_FOUND)
     #-----------------------------------------------------------------------------
     if(ENABLE_MBEDTLS)
         if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_MBEDTLS_FORCE_CPM))
-            find_package(MbedTLS OPTIONAL CONFIG)
+            find_package(MbedTLS  CONFIG)
             if(NOT MbedTLS_FOUND)
                 message(STATUS "MbedTLS: Not found using find_package(). Trying to download and build from source using CPM.")
             endif()
@@ -154,7 +155,7 @@ if(NOT LibArchive_FOUND)
             message(STATUS "OpenSSL is deprecated on MacOS - Disabling finding and/or building it")
         else()
             if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_OPENSSL_FORCE_CPM))
-                find_package(OpenSSL OPTIONAL)
+                find_package(OpenSSL )
             endif()
 
             if(NOT OpenSSL_FOUND)
@@ -181,7 +182,7 @@ if(NOT LibArchive_FOUND)
     if(ENABLE_LZ4)
         if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_LZ4_FORCE_CPM))
             if(USING_MSVC_STL)
-                find_package(lz4 OPTIONAL CONFIG)
+                find_package(lz4  CONFIG)
             else()
                 find_path(LZ4_INCLUDE_DIR lz4.h)
                 find_library(LZ4_LIBRARY NAMES lz4 liblz4)
@@ -216,7 +217,7 @@ if(NOT LibArchive_FOUND)
     if(ENABLE_LZO)
         if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_LZO_FORCE_CPM))
             if(USING_MSVC_STL)
-                find_package(lzo2 OPTIONAL CONFIG)
+                find_package(lzo2  CONFIG)
             else()
                 find_path(LZO2_INCLUDE_DIR lzo/lzoconf.h)
                 find_library(LZO2_LIBRARY NAMES lzo2 liblzo2)
@@ -247,7 +248,7 @@ if(NOT LibArchive_FOUND)
 
     if(ENABLE_LZMA)
         if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_LZMA_FORCE_CPM))
-            find_package(LibLZMA OPTIONAL)
+            find_package(LibLZMA )
         endif()
 
         # set(LZMA_API_STATIC ON)
@@ -288,7 +289,7 @@ if(NOT LibArchive_FOUND)
     if(ENABLE_ZSTD)
         if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_ZSTD_FORCE_CPM))
             if(USING_MSVC_STL)
-                find_package(zstd OPTIONAL CONFIG)
+                find_package(zstd  CONFIG)
             else()
                 find_path(ZSTD_INCLUDE_DIR zstd.h)
                 find_library(ZSTD_LIBRARY NAMES zstd libzstd)
@@ -323,7 +324,7 @@ if(NOT LibArchive_FOUND)
 
     if(ENABLE_ZLIB)
         if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_ZLIB_FORCE_CPM))
-            find_package(ZLIB OPTIONAL)
+            find_package(ZLIB )
         endif()
 
         if(NOT ZLIB_FOUND)
