@@ -359,7 +359,7 @@ if(NOT LibArchive_FOUND)
     # Obtain libarchive
     #-----------------------------------------------------------------------------
 
-    set(CPM_USE_LOCAL_PACKAGES OFF) # When we get here we must do this (we need both the NAME to be LibArchive)
+    # set(CPM_USE_LOCAL_PACKAGES OFF) # When we get here we must do this (we need both the NAME to be LibArchive)
     CPMAddPackage(
         URI "gh:libarchive/libarchive@3.8.5"
         OPTIONS
@@ -375,9 +375,9 @@ if(NOT LibArchive_FOUND)
         "ENABLE_TEST ${libarchive_sb_ENABLE_TEST}"
         "ENABLE_COVERAGE ${libarchive_sb_ENABLE_COVERAGE}"
         "ENABLE_INSTALL ${libarchive_sb_ENABLE_INSTALL}"
-        NAME LibArchive
+        NAME LibArchive_LOCAL
     )
-    unset(CPM_USE_LOCAL_PACKAGES)
+    # unset(CPM_USE_LOCAL_PACKAGES)
 
     if(BUILD_SHARED_LIBS)
         add_library(LibArchive::LibArchive ALIAS archive)
