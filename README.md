@@ -1,5 +1,8 @@
 
-[libarchive_superbuild](https://github.com/InCom-0/libarchive_superbuild) is a pure CMake wrapper repository that is meant to act as a superbuild of [libarchive](https://github.com/libarchive/libarchive). It is not really useful on its own, it is meant to be used as a dependency in other projects (through CMake ie. by add_subdirectory, FetchContent or [CPM.CMake](https://github.com/cpm-cmake/CPM.cmake)) <br><br>
+[libarchive_superbuild](https://github.com/InCom-0/libarchive_superbuild) is a pure CMake wrapper repository that is meant to act as a superbuild of [libarchive](https://github.com/libarchive/libarchive). It is not really useful on its own, it is meant to be used as a dependency in other projects (through CMake ie. by add_subdirectory, FetchContent or [CPM.CMake](https://github.com/cpm-cmake/CPM.cmake)).
+Works with all major compilers: GCC and Clang on Linux, MSVC as well as MSYS2(MinGW) GCC and Clang on Windows.
+Works with all versions of STL: GCC libstdc++, Clang libc++, MSVC STL.
+<br><br>
 
 What it does:
 1) Enables users to perform self-contained CMake builds where libarchive is a first class target in CMake (to be linked against) without installing it,
@@ -13,3 +16,4 @@ Notes:
 1) As of Feb 2026 [libarchive_superbuild](https://github.com/InCom-0/libarchive_superbuild) does not support 100% of the dependencies of libarchive to be built as part of the superbuild. However, almost all of the compression libraries are supported (see the option() lines in CMakeLists.txt to learn more),
 2) [libarchive](https://github.com/libarchive/libarchive) does include CMake, but it is ancient 'legacy style' CMake that is (arguably) not very ergonomic for it's users and it assumes specific setup and workflow,
 3) The author is aware that all of what this does can be achieved in other ways ... but not in ways that are all that straightforward without a lot of digging or know-how (as far as the author knows)
+4) Does not work with Clang-cl (MSVC flavoured Clang compiler on Windows) because the underlying libraries mistakenly think they are on Linux in such a case.
