@@ -11,7 +11,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(libarchive_sb_STAGE_OUTPUTS "Stage build output artifacts into proper directory structure" ON)
 
-option(libarchive_sb_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for dependencies." OFF)
+option(libarchive_sb_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for dependencies." ON)
 option(libarchive_sb_USE_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing dependencies." OFF)
 
 if(NOT DEFINED CPM_USE_LOCAL_PACKAGES)
@@ -30,7 +30,7 @@ option(ENABLE_OPENSSL "" OFF) # Wierd errors on MSVC as well as MSYS2 ... both s
 # Hash related dependencies
 option(ENABLE_LIBB2 "" OFF) # UNSUPPORTED and therefore OFF (reason: does not support CMake)
 option(ENABLE_LZ4 "" ON)
-option(ENABLE_LZO "" ON) # Need to turn off before release
+option(ENABLE_LZO "" OFF) # Need to turn off before release
 option(ENABLE_LZMA "" ON)
 option(ENABLE_ZSTD "" ON)
 
@@ -63,7 +63,7 @@ option(libarchive_sb_ENABLE_COVERAGE "Passed to libarchive" OFF)
 option(libarchive_sb_ENABLE_INSTALL "Passed to libarchive" OFF) # UNSUPPORTED and therefore forced OFF (reason: not the goal of this project to allow that)
 
 # Forces using CPM to find 
-option(libarchive_sb_MBEDTLS_FORCE_CPM "" ON)
+option(libarchive_sb_MBEDTLS_FORCE_CPM "" OFF)
 option(libarchive_sb_OPENSSL_FORCE_CPM "" OFF)
 
 option(libarchive_sb_LIBB2_FORCE_CPM "" OFF)
