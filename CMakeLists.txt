@@ -63,6 +63,8 @@ option(libarchive_sb_ENABLE_COVERAGE "Passed to libarchive" OFF)
 option(libarchive_sb_ENABLE_INSTALL "Passed to libarchive" OFF) # UNSUPPORTED and therefore forced OFF (reason: not the goal of this project to allow that)
 
 # Forces using CPM to find 
+option(libarchive_sb_LIBARCHIVE_FORCE_CPM "" OFF)
+
 option(libarchive_sb_MBEDTLS_FORCE_CPM "" OFF)
 option(libarchive_sb_OPENSSL_FORCE_CPM "" OFF)
 
@@ -101,7 +103,7 @@ endif()
 #-----------------------------------------------------------------------------
 
 # Try to just find libarchive, if found its all good
-if(libarchive_sb_USE_LOCAL_PACKAGES_ONLY)
+if(libarchive_sb_USE_LOCAL_PACKAGES AND (NOT libarchive_sb_LIBARCHIVE_FORCE_CPM))
     find_package(LibArchive OPTIONAL GLOBAL)
 endif()
 
@@ -168,7 +170,6 @@ if(NOT LibArchive_FOUND)
                     "OPENSSL_TARGET_VERSION 3.6.1"
                     "BUILD_SHARED_LIBS OFF"
                     "OPENSSL_TEST OFF"
-
                 )
             endif()
         endif()
@@ -358,8 +359,7 @@ if(NOT LibArchive_FOUND)
     # Obtain libarchive
     #-----------------------------------------------------------------------------
 
-    # Notes: 
-
+    set(CPM_USE_LOCAL_PACKAGES OFF) # When we get here we must do this (we need both the NAME to be LibArchive)
     CPMAddPackage(
         URI "gh:libarchive/libarchive@3.8.5"
         OPTIONS
@@ -375,8 +375,9 @@ if(NOT LibArchive_FOUND)
         "ENABLE_TEST ${libarchive_sb_ENABLE_TEST}"
         "ENABLE_COVERAGE ${libarchive_sb_ENABLE_COVERAGE}"
         "ENABLE_INSTALL ${libarchive_sb_ENABLE_INSTALL}"
-        NAME LibArchive_LOCAL
+        NAME LibArchive
     )
+    unset(CPM_USE_LOCAL_PACKAGES)
 
     if(BUILD_SHARED_LIBS)
         add_library(LibArchive::LibArchive ALIAS archive)
