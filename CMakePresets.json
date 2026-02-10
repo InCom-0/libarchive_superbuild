@@ -159,7 +159,9 @@
             "cacheVariables": {
                 "CMAKE_COLOR_DIAGNOSTICS": true,
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "CPM_SOURCE_CACHE": "../.cache/CPM"
+                "CPM_SOURCE_CACHE": "../.cache/CPM",
+                "CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+            
             }
         },
         {
