@@ -78,6 +78,9 @@ option(libarchive_sb_BZip2_FORCE_CPM "" OFF)
 option(libarchive_sb_LIBXML2_FORCE_CPM "" OFF)
 
 
+option(libarchive_sb_ENABLE_INTERNAL_TESTS "Enable building some libraries and executables used for testing whether they ca link to LibArchive::LibArchive target." OFF)
+
+
 include(cmake/CPM.cmake)
 
 ### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX) or MSVC_STL(USING_MSVC_STL)
@@ -372,7 +375,6 @@ if(NOT LibArchive_FOUND)
         "ENABLE_TEST ${libarchive_sb_ENABLE_TEST}"
         "ENABLE_COVERAGE ${libarchive_sb_ENABLE_COVERAGE}"
         "ENABLE_INSTALL ${libarchive_sb_ENABLE_INSTALL}"
-        "LibLZMA_FIND_QUIETLY OFF"
         NAME LibArchive_LOCAL
     )
 
@@ -390,5 +392,7 @@ if(NOT LibArchive_FOUND)
     endif()
 endif()
 
-add_library(testLib src/main.cpp)
-target_link_libraries(testLib PUBLIC LibArchive::LibArchive)
+if(libarchive_sb_ENABLE_INTERNAL_TESTS)
+    add_executable(libarchive_sb_testExecutable src/main.cpp)
+    target_link_libraries(libarchive_sb_testExecutable PUBLIC LibArchive::LibArchive)
+endif()
