@@ -10,5 +10,6 @@ What it does:
 <br><br>
 
 Notes:
-1) As of Feb 2026 [libarchive_superbuild](https://github.com/InCom-0/libarchive_superbuild) does not support 100% of the dependencies of libarchive to be built as part of the superbuild. However, almost all of the compression libraries are supported (see the option() lines in CMakeLists.txt to learn more)
-2) [libarchive](https://github.com/libarchive/libarchive) does include CMake, but it is ancient 'legacy style' CMake that is (arguably) not very ergonomic for it's users and it assumes specific setup and 
+1) As of Feb 2026 [libarchive_superbuild](https://github.com/InCom-0/libarchive_superbuild) does not support 100% of the dependencies of libarchive to be built as part of the superbuild. However, almost all of the compression libraries are supported (see the option() lines in CMakeLists.txt to learn more),
+2) [libarchive](https://github.com/libarchive/libarchive) does include CMake, but it is ancient 'legacy style' CMake that is (arguably) not very ergonomic for it's users and it assumes specific setup and workflow,
+3) The author is aware that all of what this does can be achieved in other ways ... but not in ways that are all that straightforward (as far as the author knows)
