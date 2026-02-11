@@ -57,7 +57,7 @@ option(libarchive_sb_ENABLE_COVERAGE "Passed to libarchive" OFF)
 option(libarchive_sb_ENABLE_INSTALL "Passed to libarchive" OFF) # UNSUPPORTED and therefore forced OFF (reason: not the goal of this project to allow that)
 
 # Forces using CPM to obtain the package (regardless of other settings)
-option(libarchive_sb_LIBARCHIVE_FORCE_CPM "" ON)
+option(libarchive_sb_LIBARCHIVE_FORCE_CPM "" OFF)
 
 option(libarchive_sb_MBEDTLS_FORCE_CPM "" OFF)
 option(libarchive_sb_OPENSSL_FORCE_CPM "" OFF)
