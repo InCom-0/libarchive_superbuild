@@ -1,3 +1,34 @@
+###=============================================================================
+### libarchive_superbuild
+###
+### Purpose: Pure CMake superbuild that provides LibArchive::LibArchive by
+### either finding a system libarchive or building libarchive plus optional
+### dependencies from source via CPM.
+###
+### How it works:
+### - Attempts find_package(LibArchive) when local packages are allowed.
+### - If not found (or forced), uses CPMAddPackage to fetch/build deps and
+###   libarchive wiring the legacy CMake of libarchive to work in this setup.
+### - Exposes LibArchive::LibArchive target and optionally stages outputs.
+### - Exposes the dependencies it (potentially) builds also.
+###
+### What it is good for:
+### - Multiplatform builds when this links/fetches/builds libarchive as is
+### - appropriate for each platform (by setting the options to what the user needs).
+### - Customize / mix & match each dependency as you see fit. Use system provided,
+###   ones, fetch (eg. more up to date ones) from official repos or provide your
+###   own forked versions.
+###
+### How to use:
+### - Usually either as 'submoduled' (via add_subproject), or get via CMake's
+###   FetchContent or use CPM.CMake (https://github.com/cpm-cmake/)
+### - Set options (e.g. ENABLE_MBEDTLS, ENABLE_LZO) before configuring.
+### - The defaults generally follow the default of upstream libarchive.
+###
+### Notes:
+### - Some options are intentionally unsupported/forced OFF (see below).
+###=============================================================================
+
 cmake_minimum_required(VERSION 3.30...4.2)
 
 project(libarchive_superbuild
