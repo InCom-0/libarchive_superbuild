@@ -141,17 +141,17 @@ endif()
 ### When libarchive_sb_BUILD_STATIC_LIBS is ON (ie. BUILD_SHARED_LIBS is OFF) we also want to prefer static versions of libs found on the system
 ### This does not have 'per-package' override ... but that shouldn't really matter
 set(_libarchive_sb_original_suffixes ${CMAKE_FIND_LIBRARY_SUFFIXES})
-if(libarchive_sb_BUILD_STATIC_LIBS)
-    if(MINGW)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dll.a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-    elseif(WIN32)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-    elseif(APPLE)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib ${CMAKE_FIND_LIBRARY_SUFFIXES})
-    else()
-        set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so ${CMAKE_FIND_LIBRARY_SUFFIXES})
-    endif()
-endif()
+# if(libarchive_sb_BUILD_STATIC_LIBS)
+#     if(MINGW)
+#         set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dll.a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+#     elseif(WIN32)
+#         set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+#     elseif(APPLE)
+#         set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib ${CMAKE_FIND_LIBRARY_SUFFIXES})
+#     else()
+#         set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so ${CMAKE_FIND_LIBRARY_SUFFIXES})
+#     endif()
+# endif()
 
 
 # Try to just find libarchive, if found its all good
