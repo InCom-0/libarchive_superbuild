@@ -21,9 +21,9 @@ set(ENABLE_NETTLE OFF) # UNSUPPORTED and therefore OFF (reason: does not support
 option(ENABLE_OPENSSL "" OFF) # Wierd errors on MSVC as well as MSYS2 ... both seem fixable though
 
 # Hash related dependencies
-option(ENABLE_LIBB2 "" OFF) # UNSUPPORTED and therefore OFF (reason: does not support CMake)
+option(ENABLE_LIBB2 "" ON)
 option(ENABLE_LZ4 "" ON)
-option(ENABLE_LZO "" ON) # Need to turn off before release
+option(ENABLE_LZO "" OFF)
 option(ENABLE_LZMA "" OFF)
 option(ENABLE_ZSTD "" ON)
 
@@ -73,7 +73,7 @@ option(libarchive_sb_BZip2_FORCE_CPM "" OFF)
 option(libarchive_sb_LIBXML2_FORCE_CPM "" OFF)
 
 
-option(libarchive_sb_ENABLE_INTERNAL_TESTS "Enable building some libraries and executables used for testing whether they ca link to LibArchive::LibArchive target." OFF)
+option(libarchive_sb_ENABLE_INTERNAL_TESTS "Enable building some libraries and executables used for testing whether they can link to LibArchive::LibArchive target." OFF)
 
 
 include(cmake/CPM.cmake)
@@ -129,47 +129,42 @@ if(NOT LibArchive_FOUND)
     # Obtain baseline dependencies 
     #-----------------------------------------------------------------------------
     if(ENABLE_MBEDTLS)
-        if(lCPM_USE_LOCAL_PACKAGESS AND (NOT libarchive_sb_MBEDTLS_FORCE_CPM))
-            find_package(MbedTLS CONFIG)
-            if(NOT MbedTLS_FOUND)
-                message(STATUS "MbedTLS: Not found using find_package(). Trying to download and build from source using CPM.")
-            endif()
-        endif()
+        # NOTE: MbedTLS >=4.0 will not work, because it changed the underlying project structure (as of Feb 2026)
+        CPMAddPackage(
+            URL https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.5/mbedtls-3.6.5.tar.bz2
+            URL_HASH SHA256=4a11f1777bb95bf4ad96721cac945a26e04bf19f57d905f241fe77ebeddf46d8
+            OPTIONS
+            "USE_SHARED_MBEDTLS_LIBRARY ${libarchive_sb_BUILD_SHARED_LIBS}"
+            "USE_STATIC_MBEDTLS_LIBRARY ${libarchive_sb_BUILD_STATIC_LIBS}"
+            "USE_SHARED_TF_PSA_CRYPTO_LIBRARY OFF"
+            "USE_STATIC_TF_PSA_CRYPTO_LIBRARY ON"
+            "ENABLE_TESTING OFF"
+            "ENABLE_PROGRAMS OFF"
+            EXCLUDE_FROM_ALL TRUE
+            FORCE ${libarchive_sb_MBEDTLS_FORCE_CPM}
+            NAME MbedTLS
+        )
+        # This is a hack to trick the ancient-style CMakeLists script in libarchive
+        # LibArchive later runs tests against existence of includes which fail ...
+        # ... this is ok since we trick it to link first class CMake target 'tfpsacrypto' which has the includes attached as part of 'BUILD_INTERFACE'
 
-        if(NOT MbedTLS_FOUND)
-            if(CPM_LOCAL_PACKAGES_ONLY AND (NOT libarchive_sb_MBEDTLS_FORCE_CPM))
-                message(FATAL_ERROR "MbedTLS: Trying to download when 'CPM_LOCAL_PACKAGES_ONLY' is set to a truthy value; The package is missing (or otherwise CMake cannot find it)")
-            endif()
-            CPMAddPackage(
-                URL https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-4.0.0/mbedtls-4.0.0.tar.bz2
-                URL_HASH SHA256=2f3a47f7b3a541ddef450e4867eeecb7ce2ef7776093f3a11d6d43ead6bf2827
-                OPTIONS
-                "USE_SHARED_MBEDTLS_LIBRARY ${libarchive_sb_BUILD_SHARED_LIBS}"
-                "USE_STATIC_MBEDTLS_LIBRARY ${libarchive_sb_BUILD_STATIC_LIBS}"
-                "USE_SHARED_TF_PSA_CRYPTO_LIBRARY OFF"
-                "USE_STATIC_TF_PSA_CRYPTO_LIBRARY ON"
-                "ENABLE_TESTING OFF"
-                "ENABLE_PROGRAMS OFF"
-                EXCLUDE_FROM_ALL TRUE
-                NAME MbedTLS
-            )
-            # This is a hack to trick the ancient-style CMakeLists script in libarchive
-            # LibArchive later runs tests against existence of includes which fail ...
-            # ... this is ok since we trick it to link first class CMake target 'tfpsacrypto' which has the includes attached as part of 'BUILD_INTERFACE'
+        if(MbedTLS_ADDED)
+            if(NOT TARGET MbedTLS::mbedcrypto_static)
+                add_library(MbedTLS::mbedcrypto_static ALIAS mbedcrypto)
+                set(MBEDCRYPTO_LIBRARY MbedTLS::mbedcrypto_static)
+                set(MBEDTLS_INCLUDE_DIRS ${MbedTLS_SOURCE_DIR}/include)
+                find_package_handle_standard_args(TFPSACRYPTO DEFAULT_MSG MBEDCRYPTO_LIBRARY MBEDCRYPTO_LIBRARY)
 
-            set(MBEDTLS_INCLUDE_DIRS ${MbedTLS_SOURCE_DIR}/include)
-            set(MBEDTLS_LIBRARY MbedTLS::mbedtls)
-            set(MBEDX509_LIBRARY MbedTLS::mbedx509)
-            set(MBEDCRYPTO_LIBRARY tfpsacrypto)
-            find_package_handle_standard_args(TFPSACRYPTO DEFAULT_MSG MBEDCRYPTO_LIBRARY)
-            if(NOT TFPSACRYPTO_FOUND)
-                message(FATAL_ERROR "MbedTLS: CMake was not successful is obtaining and setting up MbedTLS using CPM (attempt to build from source).
+                if(TFPSACRYPTO_FOUND)
+                    set(MBEDTLS_FOUND TRUE)
+                else()
+                    message(FATAL_ERROR "MbedTLS: CMake was not successful is obtaining and setting up MbedTLS using CPM (attempt to build from source).
                  This should never happen unless the upstream repo is broken or otherwise made incompatible.")
-            else()
-                set(MBEDTLS_FOUND TRUE)
+                endif()
             endif()
-
+        else()
         endif()
+
     endif()
 
     if(ENABLE_OPENSSL)
@@ -201,6 +196,30 @@ if(NOT LibArchive_FOUND)
     #-----------------------------------------------------------------------------
     # Obtain compression library dependencies
     #-----------------------------------------------------------------------------
+    if(ENABLE_LIBB2)
+        CPMAddPackage(
+            URI "gh:InCom-0/BLAKE2#cmake"
+            FORCE ${libarchive_sb_LIBB2_FORCE_CPM}
+            OPTIONS
+            "ISA_EXTENSION Best"
+            NAME BLAKE2
+        )
+
+        ### Note: LZ4 always builds as static lib when in 'bundled mode', which this is
+        if(BLAKE2_ADDED)
+            if(NOT TARGET libb2::libb2)
+                add_library(libb2::libb2 ALIAS libb2)
+            endif()
+
+            if(NOT DEFINED BLAKE2_SELECTED_INCLUDE_DIR)
+                message(FATAL_ERROR "LIBB2: libb2 was obtained using CPM, but it didn't define 'BLAKE2_SELECTED_INCLUDE_DIR' CACHE variable, which is required.")
+            endif()
+            set(LIBB2_INCLUDE_DIR ${BLAKE2_SOURCE_DIR}/${BLAKE2_SELECTED_INCLUDE_DIR})
+            set(LIBB2_LIBRARY libb2::libb2)
+        else()
+        endif()
+    endif()
+
     if(ENABLE_LZ4)
         CPMAddPackage(
             URI "gh:lz4/lz4@1.10.0"
@@ -217,9 +236,9 @@ if(NOT LibArchive_FOUND)
         if(LZ4_ADDED)
             if(NOT TARGET lz4::lz4)
                 add_library(lz4::lz4 ALIAS lz4_static)
-                set(LZ4_INCLUDE_DIR ${LZ4_SOURCE_DIR}/lib)
-                set(LZ4_LIBRARY lz4::lz4)
             endif()
+            set(LZ4_INCLUDE_DIR ${LZ4_SOURCE_DIR}/lib)
+            set(LZ4_LIBRARY lz4::lz4)
         else()
         endif()
     endif()
@@ -241,9 +260,10 @@ if(NOT LibArchive_FOUND)
                 else()
                     add_library(lzo2::lzo2 ALIAS lzo_shared_lib)
                 endif()
-                set(LZO2_INCLUDE_DIR ${LZO2_SOURCE_DIR}/include)
-                set(LZO2_LIBRARY lzo2::lzo2)
             endif()
+            set(LZO2_INCLUDE_DIR ${LZO2_SOURCE_DIR}/include)
+            set(LZO2_LIBRARY lzo2::lzo2)
+
         else()
         endif()
     endif()
@@ -358,16 +378,8 @@ if(NOT LibArchive_FOUND)
             else()
                 set(ZLIB_WINAPI FALSE)
             endif()
-
         else()
         endif()
-
-        # This is a hack to trick the ancient-style CMakeLists script in libarchive
-        # set(ZLIB_LIBRARY zlibstatic)
-        # set(ZLIB_LIBRARIES ${ZLIB_LIBRARY})
-        # set(ZLIB_INCLUDE_DIR ${ZLIB_SOURCE_DIR})
-        # find_package_handle_standard_args(ZLIB DEFAULT_MSG ZLIB_LIBRARY ZLIB_INCLUDE_DIR)
-
     endif()
 
 
@@ -382,24 +394,12 @@ if(NOT LibArchive_FOUND)
 
     ### Turning off check_function_exists when the dependencies in question are added by CPM
     ### This is a very hacky solution ... but a better one does not exist as far as I know
-    if(libb2_ADDED)
-        set(HAVE_LIBB2 TRUE)
-    endif()
-    if(zstd_ADDED)
-        set(HAVE_LIBZSTD TRUE)
-        set(HAVE_ZSTD_compressStream TRUE)
-        set(HAVE_ZSTD_minCLevel TRUE)
-    endif()
-    if(zstd_ADDED)
-        set(HAVE_PKCS5_PBKDF2_HMAC_SHA1 TRUE)
-    endif()
-
+    include(cmake/scripts/libarchive_sb_compileChecksOverride.cmake)
 
     CPMAddPackage(
         URI "gh:libarchive/libarchive@3.8.5"
         OPTIONS
         "BUILD_SHARED_LIBS ${libarchive_sb_BUILD_SHARED_LIBS}"
-        "ENABLE_LIBB2 OFF"
         "ENABLE_EXPAT OFF"
         # "ENABLE_LIBGCC OFF"
         # "ENABLE_PCREPOSIX OFF"
