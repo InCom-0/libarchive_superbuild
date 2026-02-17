@@ -18,7 +18,7 @@ option(CPM_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing
 # Baseline dependencies
 option(ENABLE_MBEDTLS "" OFF)
 set(ENABLE_NETTLE OFF) # UNSUPPORTED and therefore OFF (reason: does not support CMake)
-option(ENABLE_OPENSSL "" OFF) # Wierd errors on MSVC as well as MSYS2 ... both seem fixable though
+option(ENABLE_OPENSSL "" ON) # Wierd errors on MSVC as well as MSYS2 ... both seem fixable though
 
 # Hash related dependencies
 option(ENABLE_LIBB2 "" ON)
@@ -56,7 +56,7 @@ option(libarchive_sb_ENABLE_COVERAGE "Passed to libarchive" OFF)
 option(libarchive_sb_ENABLE_INSTALL "Passed to libarchive" OFF) # UNSUPPORTED and therefore forced OFF (reason: not the goal of this project to allow that)
 
 # Forces using CPM to obtain the package (regardless of other settings)
-option(libarchive_sb_LIBARCHIVE_FORCE_CPM "" ON)
+option(libarchive_sb_LIBARCHIVE_FORCE_CPM "" OFF)
 
 option(libarchive_sb_MBEDTLS_FORCE_CPM "" OFF)
 option(libarchive_sb_OPENSSL_FORCE_CPM "" OFF)
@@ -64,7 +64,7 @@ option(libarchive_sb_OPENSSL_FORCE_CPM "" OFF)
 option(libarchive_sb_LIBB2_FORCE_CPM "" OFF)
 option(libarchive_sb_LZ4_FORCE_CPM "" OFF)
 option(libarchive_sb_LZO_FORCE_CPM "" OFF)
-option(libarchive_sb_LZMA_FORCE_CPM "" ON)
+option(libarchive_sb_LZMA_FORCE_CPM "" OFF)
 option(libarchive_sb_ZSTD_FORCE_CPM "" OFF)
 
 option(libarchive_sb_ZLIB_FORCE_CPM "" OFF)
@@ -169,27 +169,38 @@ if(NOT LibArchive_FOUND)
 
     if(ENABLE_OPENSSL)
         if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-            message(STATUS "OpenSSL is deprecated on MacOS - Disabling finding and/or building it")
+            message(FATAL_ERROR "OpenSSL is deprecated on MacOS - Disabling finding and/or building it")
         else()
-            if(lCPM_USE_LOCAL_PACKAGESS AND (NOT libarchive_sb_OPENSSL_FORCE_CPM))
+            # We need to test for some programs here:
+            # jom  
+            # strawberryperl
+            # nasm
+
+            # set(OPENSSL_CONFIGURE_TOOL "C:/msys64/usr/bin/perl.exe")
+            # set(OPENSSL_CONFIGURE_TOOL "C:/msys64/ucrt64/bin/perl.exe")
+
+            # Have to do it like this because the openssl-cmake script does not work otherwise
+            if((CPM_LOCAL_PACKAGES_ONLY) OR (CPM_USE_LOCAL_PACKAGES AND NOT libarchive_sb_OPENSSL_FORCE_CPM))
                 find_package(OpenSSL)
+                if(CPM_LOCAL_PACKAGES_ONLY)
+                    message(FATAL_ERROR "openssl_cmake: 'CPM_LOCAL_PACKAGES_ONLY' is set to TRUE, but OpenSSL was not found.")
+                endif()
             endif()
 
             if(NOT OpenSSL_FOUND)
-                # We need to test for some programs here:
-                # jom  
-                # strawberryperl
-                # nasm
-
-                set(OPENSSL_CONFIGURE_TOOL "C:/msys64/usr/bin/perl.exe")
                 CPMAddPackage(
                     URI "gh:jimmy-park/openssl-cmake#3.6.0"
                     OPTIONS
                     "OPENSSL_TARGET_VERSION 3.6.1"
                     "BUILD_SHARED_LIBS OFF"
+                    "OPENSSL_INSTALL OFF"
                     "OPENSSL_TEST OFF"
+                    FORCE TRUE
+                    NAME openssl-cmake
                 )
             endif()
+
+
         endif()
     endif()
 
@@ -202,6 +213,7 @@ if(NOT LibArchive_FOUND)
             FORCE ${libarchive_sb_LIBB2_FORCE_CPM}
             OPTIONS
             "ISA_EXTENSION Best"
+            "BUILD_TESTING OFF"
             NAME BLAKE2
         )
 
@@ -214,8 +226,8 @@ if(NOT LibArchive_FOUND)
             if(NOT DEFINED BLAKE2_SELECTED_INCLUDE_DIR)
                 message(FATAL_ERROR "LIBB2: libb2 was obtained using CPM, but it didn't define 'BLAKE2_SELECTED_INCLUDE_DIR' CACHE variable, which is required.")
             endif()
-            set(LIBB2_INCLUDE_DIR ${BLAKE2_SOURCE_DIR}/${BLAKE2_SELECTED_INCLUDE_DIR})
-            set(LIBB2_LIBRARY libb2::libb2)
+            set(LIBB2_INCLUDE_DIR ${BLAKE2_SOURCE_DIR}/${BLAKE2_SELECTED_INCLUDE_DIR} CACHE PATH "")
+            set(LIBB2_LIBRARY libb2::libb2 CACHE STRING "")
         else()
         endif()
     endif()
@@ -237,8 +249,8 @@ if(NOT LibArchive_FOUND)
             if(NOT TARGET lz4::lz4)
                 add_library(lz4::lz4 ALIAS lz4_static)
             endif()
-            set(LZ4_INCLUDE_DIR ${LZ4_SOURCE_DIR}/lib)
-            set(LZ4_LIBRARY lz4::lz4)
+            set(LZ4_INCLUDE_DIR ${LZ4_SOURCE_DIR}/lib CACHE PATH "")
+            set(LZ4_LIBRARY lz4::lz4 CACHE STRING "")
         else()
         endif()
     endif()
@@ -290,10 +302,22 @@ if(NOT LibArchive_FOUND)
             if(NOT TARGET LibLZMA::LibLZMA)
                 add_library(LibLZMA::LibLZMA ALIAS liblzma)
             endif()
+
+            target_compile_options(liblzma PRIVATE
+                $<$<COMPILE_LANGUAGE:C>:$<$<C_COMPILER_ID:Clang>:
+                -Wno-switch
+                -Wno-switch-enum
+                -Wno-switch-default
+                -Wno-covered-switch-default
+                -Wno-unsafe-buffer-usage
+                >>
+            )
+            target_compile_features(liblzma PRIVATE c_std_99)
+
             # This is a hack to trick the ancient-style CMakeLists script in libarchive
             set(LIBLZMA_LIBRARY LibLZMA::LibLZMA)
             set(LIBLZMA_LIBRARIES ${LIBLZMA_LIBRARY})
-            set(LIBLZMA_INCLUDE_DIR ${LibLZMA_SOURCE_DIR}/src/liblzma/api)
+            set(LIBLZMA_INCLUDE_DIR ${LibLZMA_SOURCE_DIR}/src/liblzma/api )
             set(LIBLZMA_INCLUDE_DIRS ${LIBLZMA_INCLUDE_DIR})
             find_package_handle_standard_args(LIBLZMA DEFAULT_MSG LIBLZMA_LIBRARIES LIBLZMA_INCLUDE_DIRS)
             if(NOT LIBLZMA_FOUND)
@@ -346,7 +370,7 @@ if(NOT LibArchive_FOUND)
             ### Hacks to make sure the build does not blow.
             ### Lbarchive tries to 'trial compile' linking to zlib which doesn't exist yet if we are building it
             ### These settings just plug in the results of that
-            set(ZLIB_INCLUDE_DIR ${zstd_SOURCE_DIR})
+            
 
             if(${libarchive_sb_BUILD_STATIC_LIBS})
                 if(NOT TARGET ZLIB::ZLIB)
@@ -363,6 +387,8 @@ if(NOT LibArchive_FOUND)
                 set(WITHOUT_ZLIB_DLL FALSE)
 
             endif()
+
+            set(ZLIB_INCLUDE_DIR ${zstd_SOURCE_DIR})
             set(ZLIB_LIBRARIES ZLIB::ZLIB)
 
             if(USING_MSVC_STL)
@@ -403,6 +429,7 @@ if(NOT LibArchive_FOUND)
         "ENABLE_TEST ${libarchive_sb_ENABLE_TEST}"
         "ENABLE_COVERAGE ${libarchive_sb_ENABLE_COVERAGE}"
         "ENABLE_INSTALL ${libarchive_sb_ENABLE_INSTALL}"
+        PATCHES "cmake/patches/libarchive-openssl-checkstate.patch"
         FORCE TRUE
         NAME LibArchive
     )

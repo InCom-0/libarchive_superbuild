@@ -225,7 +225,7 @@
             "name": "MSYS_ucrt_PATH",
             "hidden": true,
             "environment": {
-                "PATH": "C:/msys64/ucrt64/bin;$penv{PATH}"
+                "PATH": "C:/msys64/ucrt64/bin;C:/msys64;$penv{PATH}"
             },
             "cacheVariables": {
                 "CMAKE_PREFIX_PATH": "C:/msys64/ucrt64"
