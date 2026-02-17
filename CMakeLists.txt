@@ -24,7 +24,7 @@ option(ENABLE_OPENSSL "" OFF) # Wierd errors on MSVC as well as MSYS2 ... both s
 option(ENABLE_LIBB2 "" ON)
 option(ENABLE_LZ4 "" ON)
 option(ENABLE_LZO "" OFF)
-option(ENABLE_LZMA "" OFF)
+option(ENABLE_LZMA "" ON)
 option(ENABLE_ZSTD "" ON)
 
 option(ENABLE_ZLIB "" ON)
@@ -64,7 +64,7 @@ option(libarchive_sb_OPENSSL_FORCE_CPM "" OFF)
 option(libarchive_sb_LIBB2_FORCE_CPM "" OFF)
 option(libarchive_sb_LZ4_FORCE_CPM "" OFF)
 option(libarchive_sb_LZO_FORCE_CPM "" OFF)
-option(libarchive_sb_LZMA_FORCE_CPM "" OFF)
+option(libarchive_sb_LZMA_FORCE_CPM "" ON)
 option(libarchive_sb_ZSTD_FORCE_CPM "" OFF)
 
 option(libarchive_sb_ZLIB_FORCE_CPM "" OFF)
@@ -269,41 +269,33 @@ if(NOT LibArchive_FOUND)
     endif()
 
     if(ENABLE_LZMA)
-        if(lCPM_USE_LOCAL_PACKAGESS AND (NOT libarchive_sb_LZMA_FORCE_CPM))
-            find_package(LibLZMA)
-        endif()
-
-        # set(LZMA_API_STATIC ON)
-        if(NOT LibLZMA_FOUND)
-            if(CPM_LOCAL_PACKAGES_ONLY AND (NOT libarchive_sb_LZMA_FORCE_CPM))
-                message(FATAL_ERROR "LibLZMA: Trying to download when 'CPM_LOCAL_PACKAGES_ONLY' is set to a truthy value; The package is missing (or otherwise CMake cannot find it)")
+        CPMAddPackage(
+            URI "gh:tukaani-project/xz@5.8.2"
+            OPTIONS
+            "BUILD_SHARED_LIBS ${libarchive_sb_BUILD_SHARED_LIBS}"
+            "LZMA_API_STATIC ${libarchive_sb_BUILD_STATIC_LIBS}"
+            "ENABLE_NLS OFF"
+            "XZ_TOOL_XZDEC OFF"
+            "XZ_TOOL_LZMADEC OFF"
+            "XZ_TOOL_LZMAINFO OFF"
+            "XZ_TOOL_XZ OFF"
+            "XZ_TOOL_XZDEC OFF"
+            "XZ_TOOL_SCRIPTS OFF"
+            "XZ_DOXYGEN OFF"
+            "XZ_DOC OFF"
+            FORCE ${libarchive_sb_LZMA_FORCE_CPM}
+            NAME LibLZMA
+        )
+        if(LibLZMA_ADDED)
+            if(NOT TARGET LibLZMA::LibLZMA)
+                add_library(LibLZMA::LibLZMA ALIAS liblzma)
             endif()
-            set(CPM_USE_LOCAL_PACKAGES OFF) # Temporary hack that I should probably fix later
-            CPMAddPackage(
-                URI "gh:tukaani-project/xz@5.8.2"
-                OPTIONS
-                "BUILD_SHARED_LIBS ${libarchive_sb_BUILD_SHARED_LIBS}"
-                "LZMA_API_STATIC ${libarchive_sb_BUILD_STATIC_LIBS}"
-                "ENABLE_NLS OFF"
-                "XZ_TOOL_XZDEC OFF"
-                "XZ_TOOL_LZMADEC OFF"
-                "XZ_TOOL_LZMAINFO OFF"
-                "XZ_TOOL_XZ OFF"
-                "XZ_TOOL_XZDEC OFF"
-                "XZ_TOOL_SCRIPTS OFF"
-                "XZ_DOXYGEN OFF"
-                "XZ_DOC OFF"
-                NAME LibLZMA
-            )
-            unset(CPM_USE_LOCAL_PACKAGES) # Temporary hack that I should probably fix later
-
             # This is a hack to trick the ancient-style CMakeLists script in libarchive
-            set(LIBLZMA_LIBRARY liblzma)
+            set(LIBLZMA_LIBRARY LibLZMA::LibLZMA)
             set(LIBLZMA_LIBRARIES ${LIBLZMA_LIBRARY})
             set(LIBLZMA_INCLUDE_DIR ${LibLZMA_SOURCE_DIR}/src/liblzma/api)
             set(LIBLZMA_INCLUDE_DIRS ${LIBLZMA_INCLUDE_DIR})
-            find_package_handle_standard_args(LIBLZMA DEFAULT_MSG LIBLZMA_LIBRARY LIBLZMA_INCLUDE_DIR)
-
+            find_package_handle_standard_args(LIBLZMA DEFAULT_MSG LIBLZMA_LIBRARIES LIBLZMA_INCLUDE_DIRS)
             if(NOT LIBLZMA_FOUND)
                 message(FATAL_ERROR "LibLZMA: CMake was not successful is obtaining and setting up LibLZMA using CPM (attempt to build from source).
                  This should never happen unless the upstream repo is broken or otherwise made incompatible.")
