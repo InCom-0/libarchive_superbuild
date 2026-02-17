@@ -18,7 +18,7 @@ option(CPM_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing
 # Baseline dependencies
 option(ENABLE_MBEDTLS "" OFF)
 set(ENABLE_NETTLE OFF) # UNSUPPORTED and therefore OFF (reason: does not support CMake)
-option(ENABLE_OPENSSL "" ON) # Wierd errors on MSVC as well as MSYS2 ... both seem fixable though
+option(ENABLE_OPENSSL "" ON) # Does not work on MSYS2 ... both seem fixable though
 
 # Hash related dependencies
 option(ENABLE_LIBB2 "" ON)
@@ -75,13 +75,12 @@ option(libarchive_sb_LIBXML2_FORCE_CPM "" OFF)
 
 option(libarchive_sb_ENABLE_INTERNAL_TESTS "Enable building some libraries and executables used for testing whether they can link to LibArchive::LibArchive target." OFF)
 
-
 include(cmake/CPM.cmake)
 
 ### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX) or MSVC_STL(USING_MSVC_STL)
 include(cmake/stdlibQuery.cmake)
 
-### 
+### Custom modules used to find LZ4, LZO2 and BLAKE2 in a CMake-friendly way (wrapping their native PkgConfig)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 
@@ -106,6 +105,21 @@ if(BUILD_SHARED_LIBS)
 else()
     set(libarchive_sb_BUILD_SHARED_LIBS OFF)
     set(libarchive_sb_BUILD_STATIC_LIBS ON)
+endif()
+
+### When libarchive_sb_BUILD_STATIC_LIBS is ON (ie. BUILD_SHARED_LIBS is OFF) we also want to prefer static versions of libs found on the system
+### This does not have 'per-package' override ... but that shouldn't really matter
+set(_libarchive_sb_original_suffixes ${CMAKE_FIND_LIBRARY_SUFFIXES})
+if(libarchive_sb_BUILD_STATIC_LIBS)
+    if(MINGW)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dll.a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    elseif(WIN32)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    elseif(APPLE)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    else()
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    endif()
 endif()
 
 
@@ -317,7 +331,7 @@ if(NOT LibArchive_FOUND)
             # This is a hack to trick the ancient-style CMakeLists script in libarchive
             set(LIBLZMA_LIBRARY LibLZMA::LibLZMA)
             set(LIBLZMA_LIBRARIES ${LIBLZMA_LIBRARY})
-            set(LIBLZMA_INCLUDE_DIR ${LibLZMA_SOURCE_DIR}/src/liblzma/api )
+            set(LIBLZMA_INCLUDE_DIR ${LibLZMA_SOURCE_DIR}/src/liblzma/api)
             set(LIBLZMA_INCLUDE_DIRS ${LIBLZMA_INCLUDE_DIR})
             find_package_handle_standard_args(LIBLZMA DEFAULT_MSG LIBLZMA_LIBRARIES LIBLZMA_INCLUDE_DIRS)
             if(NOT LIBLZMA_FOUND)
@@ -370,7 +384,7 @@ if(NOT LibArchive_FOUND)
             ### Hacks to make sure the build does not blow.
             ### Lbarchive tries to 'trial compile' linking to zlib which doesn't exist yet if we are building it
             ### These settings just plug in the results of that
-            
+
 
             if(${libarchive_sb_BUILD_STATIC_LIBS})
                 if(NOT TARGET ZLIB::ZLIB)
@@ -463,10 +477,12 @@ if(NOT LibArchive_FOUND)
         endif()
     endif()
 
-
     unset(ZLIB_USE_STATIC_LIBS)
 endif()
 
+### Reset the original library suffixes (whatever they were) 
+set(CMAKE_FIND_LIBRARY_SUFFIXES ${_libarchive_sb_original_suffixes})
+unset(_libarchive_sb_original_suffixes)
 
 if(libarchive_sb_ENABLE_INTERNAL_TESTS)
     add_executable(libarchive_sb_testExecutable src/main.cpp)
