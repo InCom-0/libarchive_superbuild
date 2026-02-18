@@ -2,8 +2,8 @@
 ### libarchive_superbuild
 ###
 ### Purpose: Pure CMake superbuild that provides LibArchive::LibArchive by
-### either finding a system libarchive or building libarchive plus optional
-### dependencies from source via CPM.
+### either finding a system libarchive or building libarchive plus building
+### optional dependencies from source via CPM (or linking the system ones).
 ###
 ### How it works:
 ### - Attempts find_package(LibArchive) when local packages are allowed.
@@ -22,7 +22,7 @@
 ### How to use:
 ### - Usually either as 'submoduled' (via add_subproject), or get via CMake's
 ###   FetchContent or use CPM.CMake (https://github.com/cpm-cmake/)
-### - Set options (e.g. ENABLE_MBEDTLS, ENABLE_LZO) before configuring.
+### - Set options (e.g. ENABLE_MBEDTLS, ENABLE_LZMA) before configuring.
 ### - The defaults generally follow the default of upstream libarchive.
 ###
 ### Notes:
@@ -54,7 +54,7 @@ option(ENABLE_OPENSSL "" ON) # Does not work on MSYS2 ... both seem fixable thou
 # Hash related dependencies
 option(ENABLE_LIBB2 "" ON)
 option(ENABLE_LZ4 "" ON)
-option(ENABLE_LZO "" OFF)
+option(ENABLE_LZO "" OFF) ### Note LZO is GPL-2+
 option(ENABLE_LZMA "" ON)
 option(ENABLE_ZSTD "" ON)
 
