@@ -138,21 +138,6 @@ else()
     set(libarchive_sb_BUILD_STATIC_LIBS ON)
 endif()
 
-### When libarchive_sb_BUILD_STATIC_LIBS is ON (ie. BUILD_SHARED_LIBS is OFF) we also want to prefer static versions of libs found on the system
-### This does not have 'per-package' override ... but that shouldn't really matter
-set(_libarchive_sb_original_suffixes ${CMAKE_FIND_LIBRARY_SUFFIXES})
-# if(libarchive_sb_BUILD_STATIC_LIBS)
-#     if(MINGW)
-#         set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dll.a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-#     elseif(WIN32)
-#         set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-#     elseif(APPLE)
-#         set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib ${CMAKE_FIND_LIBRARY_SUFFIXES})
-#     else()
-#         set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so ${CMAKE_FIND_LIBRARY_SUFFIXES})
-#     endif()
-# endif()
-
 
 # Try to just find libarchive, if found its all good
 if((CPM_LOCAL_PACKAGES_ONLY OR CPM_USE_LOCAL_PACKAGES) AND (NOT libarchive_sb_LIBARCHIVE_FORCE_CPM))
@@ -348,17 +333,6 @@ if(NOT LibArchive_FOUND)
                 add_library(LibLZMA::LibLZMA ALIAS liblzma)
             endif()
 
-            target_compile_options(liblzma PRIVATE
-                $<$<COMPILE_LANGUAGE:C>:$<$<C_COMPILER_ID:Clang>:
-                -Wno-switch
-                -Wno-switch-enum
-                -Wno-switch-default
-                -Wno-covered-switch-default
-                -Wno-unsafe-buffer-usage
-                >>
-            )
-            target_compile_features(liblzma PRIVATE c_std_99)
-
             # This is a hack to trick the ancient-style CMakeLists script in libarchive
             set(LIBLZMA_LIBRARY LibLZMA::LibLZMA)
             set(LIBLZMA_LIBRARIES ${LIBLZMA_LIBRARY})
@@ -467,8 +441,6 @@ if(NOT LibArchive_FOUND)
         # "ENABLE_LIBGCC OFF"
         # "ENABLE_PCREPOSIX OFF"
         # "ENABLE_PCRE2POSIX OFF"
-        # "LIBLZMA_INCLUDE_DIRS ${LibLZMA_SOURCE_DIR}/src/liblzma/api"
-        # "LIBLZMA_LIBRARIES liblzma"
         "ENABLE_XATTR ${libarchive_sb_XATTR}"
         "ENABLE_ACL ${libarchive_sb_ACL}"
         "ENABLE_TEST ${libarchive_sb_ENABLE_TEST}"
@@ -511,9 +483,6 @@ if(NOT LibArchive_FOUND)
     unset(ZLIB_USE_STATIC_LIBS)
 endif()
 
-### Reset the original library suffixes (whatever they were) 
-set(CMAKE_FIND_LIBRARY_SUFFIXES ${_libarchive_sb_original_suffixes})
-unset(_libarchive_sb_original_suffixes)
 
 if(libarchive_sb_ENABLE_INTERNAL_TESTS)
     add_executable(libarchive_sb_testExecutable src/main.cpp)
