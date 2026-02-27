@@ -14,7 +14,7 @@
 ###
 ### What it is good for:
 ### - Multiplatform builds when this links/fetches/builds libarchive as is
-### - appropriate for each platform (by setting the options to what the user needs).
+###   appropriate for each platform (by setting the options to what the user needs).
 ### - Customize / mix & match each dependency as you see fit. Use system provided,
 ###   ones, fetch (eg. more up to date ones) from official repos or provide your
 ###   own forked versions.
@@ -61,7 +61,7 @@ option(ENABLE_ZSTD "" ON)
 option(ENABLE_ZLIB "" ON)
 option(ENABLE_BZip2 "" OFF) # UNIMPLEMENTED
 
-# Sequencial usage by libarchive: Uses LIBXML2 if available, if not tries EXPAT, if not tries WIN32_XMLITE
+# Sequential usage by libarchive: Uses LIBXML2 if available, if not tries EXPAT, if not tries WIN32_XMLITE
 # Settings here should reflect that, as only one will ever get linked in libarchive
 option(ENABLE_LIBXML2 "" OFF) # UNSUPPORTED for now and therefore OFF (reason: requires inconv which is not really available everywhere)
 option(ENABLE_ICONV "" ${ENABLE_LIBXML2}) # This is used for LIBXML2, if libiconv is disabled then LIBXML2 won't be linked (or otherwise obtained)
@@ -87,7 +87,7 @@ option(libarchive_sb_ENABLE_COVERAGE "Passed to libarchive" OFF)
 option(libarchive_sb_ENABLE_INSTALL "Passed to libarchive" OFF) # UNSUPPORTED and therefore forced OFF (reason: not the goal of this project to allow that)
 
 # Forces using CPM to obtain the package (regardless of other settings)
-option(libarchive_sb_LIBARCHIVE_FORCE_CPM "" OFF)
+option(libarchive_sb_LIBARCHIVE_FORCE_CPM "" ON)
 
 option(libarchive_sb_MBEDTLS_FORCE_CPM "" OFF)
 option(libarchive_sb_OPENSSL_FORCE_CPM "" OFF)
@@ -373,7 +373,9 @@ if(NOT LibArchive_FOUND)
     if(ENABLE_ZLIB)
         set(ZLIB_USE_STATIC_LIBS ${libarchive_sb_BUILD_STATIC_LIBS})
         CPMAddPackage(
-            URI "gh:madler/zlib@1.3.1"
+            URL https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.xz
+            URL_HASH SHA256=d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3
+            EXCLUDE_FROM_ALL TRUE
             OPTIONS
             "ZLIB_BUILD_SHARED ${libarchive_sb_BUILD_SHARED_LIBS}"
             "ZLIB_BUILD_STATIC ${libarchive_sb_BUILD_STATIC_LIBS}"
@@ -381,7 +383,9 @@ if(NOT LibArchive_FOUND)
             "ZLIB_INSTALL_COMPAT_DLL OFF"
             "ZLIB_BUILD_TESTING OFF"
             "ZLIB_BUILD_MINIZIP OFF"
+            "ZLIB_BUILD_EXAMPLES OFF"
             FORCE ${libarchive_sb_ZLIB_FORCE_CPM}
+            VERSION 1.3
             NAME ZLIB
         )
 
