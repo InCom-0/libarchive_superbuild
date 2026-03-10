@@ -62,7 +62,7 @@ if(LZ4_PC_FOUND)
     set(LZ4_INCLUDE_DIRS ${LZ4_INCLUDE_DIR})
 
 else()
-    message(STATUS "LZ4: liblz4 was not found via find_package() via Findlz4.cmake module via PkgConfig.")
+    message(STATUS "LZ4: liblz4 was not found via find_package() via FindLZ4.cmake module via PkgConfig.")
 endif()
 
 mark_as_advanced(

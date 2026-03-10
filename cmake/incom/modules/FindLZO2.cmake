@@ -62,7 +62,7 @@ if(LZO2_PC_FOUND)
     set(LZO2_INCLUDE_DIRS ${LZO2_INCLUDE_DIR})
 
 else()
-    message(STATUS "lzo2: liblzo2 was not found via find_package() via Findlzo2.cmake module via PkgConfig.")
+    message(STATUS "lzo2: liblzo2 was not found via find_package() via FindLZO2.cmake module via PkgConfig.")
 endif()
 
 mark_as_advanced(

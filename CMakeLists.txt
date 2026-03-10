@@ -106,19 +106,19 @@ option(libarchive_sb_LIBXML2_FORCE_CPM "" OFF)
 
 option(libarchive_sb_ENABLE_INTERNAL_TESTS "Enable building some libraries and executables used for testing whether they can link to LibArchive::LibArchive target." OFF)
 
-include(cmake/CPM.cmake)
+include(cmake/lefticus/CPM.cmake)
 
 ### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX) or MSVC_STL(USING_MSVC_STL)
-include(cmake/stdlibQuery.cmake)
+include(cmake/incom/StdlibQuery.cmake)
 
 ### Custom modules used to find LZ4, LZO2 and BLAKE2 in a CMake-friendly way (wrapping their native PkgConfig)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/incom/modules")
 
 
 #-----------------------------------------------------------------------------
 # Staging
 #-----------------------------------------------------------------------------
-include(cmake/StageOutputs.cmake)
+include(cmake/incom/StageOutputs.cmake)
 if(libarchive_sb_STAGE_OUTPUTS)
     stageOutputDirsFor(libarchive_sb)
 endif()
@@ -435,7 +435,7 @@ if(NOT LibArchive_FOUND)
 
     ### Turning off check_function_exists when the dependencies in question are added by CPM
     ### This is a very hacky solution ... but a better one does not exist as far as I know
-    include(cmake/scripts/libarchive_sb_compileChecksOverride.cmake)
+    include(cmake/libarchive_sb_compileChecksOverride.cmake)
 
     CPMAddPackage(
         URI "gh:libarchive/libarchive@3.8.5"

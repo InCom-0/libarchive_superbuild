@@ -62,7 +62,7 @@ if(BLAKE2_PC_FOUND)
     set(BLAKE2_INCLUDE_DIRS ${BLAKE2_INCLUDE_DIR})
 
 else()
-    message(STATUS "libb2: liblibb2 was not found via find_package() via Findlibb2.cmake module via PkgConfig.")
+    message(STATUS "BLAKE2: liblibb2 was not found via find_package() via FindBLAKE2.cmake module via PkgConfig.")
 endif()
 
 mark_as_advanced(
