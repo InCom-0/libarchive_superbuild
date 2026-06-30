@@ -17,15 +17,15 @@ Result Variables
 This will define the following variables in your project.
 Note that one typically does not need to use these variables because lz4::lz4 is first class CMake target that encapsulates all of them.
 
-``XXHASH_FOUND``
+``xxHash_FOUND``
   true if (the requested version of) XXHASH is available.
-``XXHASH_VERSION``
+``xxHash_VERSION``
   the version of XXHASH.
-``XXHASH_LIBRARY``
+``xxHash_LIBRARY``
   the libraries to link against to use XXHASH.
-``XXHASH_INCLUDE_DIR``
+``xxHash_INCLUDE_DIR``
   where to find the LZ headers.
-``XXHASH_COMPILE_OPTIONS``
+``xxHash_COMPILE_OPTIONS``
   this should be passed to target_compile_options(), if the
   target is not used for linking
 
@@ -57,47 +57,47 @@ endif()
 find_package(${_pkg} ${_args})
 if(${_pkg}_FOUND)
     # Config package found; stop here.
-    set(XXHASH_FOUND TRUE)
+    set(xxHash_FOUND TRUE)
     return()
 endif()
 
 # Config package NOT found; proceed with finding using PkgConfig.
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
-    pkg_check_modules(XXHASH_PC QUIET IMPORTED_TARGET libxxhash)
+    pkg_check_modules(xxHash_PC QUIET IMPORTED_TARGET libxxhash)
 endif()
 
-if(XXHASH_PC_FOUND)
+if(xxHash_PC_FOUND)
     if(NOT TARGET xxHash::xxhash)
-        add_library(xxHash::xxhash ALIAS PkgConfig::XXHASH_PC)
+        add_library(xxHash::xxhash ALIAS PkgConfig::xxHash_PC)
     endif()
 
-    set(XXHASH_COMPILE_OPTIONS ${XXHASH_PC_CFLAGS_OTHER} CACHE STRING "libxxhash target compile options")
-    set(XXHASH_VERSION ${XXHASH_PC_VERSION} CACHE STRING "libxxhash target version")
+    set(xxHash_COMPILE_OPTIONS ${xxHash_PC_CFLAGS_OTHER} CACHE STRING "libxxhash target compile options")
+    set(xxHash_VERSION ${xxHash_PC_VERSION} CACHE STRING "libxxhash target version")
 
-    find_path(XXHASH_INCLUDE_DIR
+    find_path(xxHash_INCLUDE_DIR
         NAMES xxhash.h
-        HINTS ${XXHASH_PC_INCLUDEDIR} ${XXHASH_PC_INCLUDE_DIRS}
+        HINTS ${xxHash_PC_INCLUDEDIR} ${xxHash_PC_INCLUDE_DIRS}
     )
-    find_library(XXHASH_LIBRARY
-        NAMES ${XXHASH_NAMES} libxxhash
-        HINTS ${XXHASH_PC_LIBDIR} ${XXHASH_PC_LIBRARY_DIRS}
+    find_library(xxHash_LIBRARY
+        NAMES ${xxHash_NAMES} xxhash
+        HINTS ${xxHash_PC_LIBDIR} ${xxHash_PC_LIBRARY_DIRS}
     )
 
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(
         ${CMAKE_FIND_PACKAGE_NAME}
-        REQUIRED_VARS XXHASH_LIBRARY XXHASH_INCLUDE_DIR
-        VERSION_VAR XXHASH_VERSION
+        REQUIRED_VARS xxHash_LIBRARY xxHash_INCLUDE_DIR
+        VERSION_VAR xxHash_VERSION
     )
-    set(XXHASH_LIBRARIES ${XXHASH_LIBRARY})
-    set(XXHASH_INCLUDE_DIRS ${XXHASH_INCLUDE_DIR})
+    set(xxHash_LIBRARIES ${xxHash_LIBRARY})
+    set(xxHash_INCLUDE_DIRS ${xxHash_INCLUDE_DIR})
 
 else()
     message(STATUS "xxHash: libxxhash was not found via find_package() via FindxxHash.cmake module via PkgConfig.")
 endif()
 
 mark_as_advanced(
-    XXHASH_LIBRARY
-    XXHASH_INCLUDE_DIR
+    xxHash_LIBRARY
+    xxHash_INCLUDE_DIR
 )

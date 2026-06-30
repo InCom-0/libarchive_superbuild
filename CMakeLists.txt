@@ -106,7 +106,7 @@ option(libarchive_sb_LIBXML2_FORCE_CPM "" OFF)
 
 option(libarchive_sb_ENABLE_INTERNAL_TESTS "Enable building some libraries and executables used for testing whether they can link to LibArchive::LibArchive target." OFF)
 
-include(cmake/lefticus/CPM.cmake)
+include(cmake/CPM_0.42.3.cmake)
 
 ### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX) or MSVC_STL(USING_MSVC_STL)
 include(cmake/incom/StdlibQuery.cmake)
@@ -312,7 +312,7 @@ if(NOT LibArchive_FOUND)
 
     if(ENABLE_LZMA)
         CPMAddPackage(
-            URI "gh:tukaani-project/xz@5.8.2"
+            URI "gh:tukaani-project/xz@5.8.3"
             OPTIONS
             "BUILD_SHARED_LIBS ${libarchive_sb_BUILD_SHARED_LIBS}"
             "LZMA_API_STATIC ${libarchive_sb_BUILD_STATIC_LIBS}"
@@ -438,7 +438,7 @@ if(NOT LibArchive_FOUND)
     include(cmake/libarchive_sb_compileChecksOverride.cmake)
 
     CPMAddPackage(
-        URI "gh:libarchive/libarchive@3.8.5"
+        URI "gh:libarchive/libarchive@3.8.8"
         OPTIONS
         "BUILD_SHARED_LIBS ${libarchive_sb_BUILD_SHARED_LIBS}"
         "ENABLE_EXPAT OFF"
