@@ -450,7 +450,6 @@ if(NOT LibArchive_FOUND)
         "ENABLE_TEST ${libarchive_sb_ENABLE_TEST}"
         "ENABLE_COVERAGE ${libarchive_sb_ENABLE_COVERAGE}"
         "ENABLE_INSTALL ${libarchive_sb_ENABLE_INSTALL}"
-        PATCHES "cmake/patches/libarchive-openssl-checkstate.patch"
         FORCE TRUE
         NAME LibArchive
     )
